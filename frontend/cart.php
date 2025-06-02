@@ -58,7 +58,7 @@ try {
             <div class="space-y-4">
                 <?php foreach ($cart as $index => $item): ?>
                     <div class="flex items-center gap-4 bg-white shadow rounded p-4">
-                        <img src="../uploads/<?= htmlspecialchars($item['image']) ?>" class="w-20 h-20 rounded object-cover">
+                        <img src="../../admin/backend/uploads//<?= htmlspecialchars($item['image']) ?>" class="w-20 h-20 rounded object-cover">
                         <div class="flex-1">
                             <h2 class="text-lg font-semibold"><?= htmlspecialchars($item['name']) ?></h2>
                             <p class="text-sm text-gray-600">Harga: Rp <?= number_format($item['price'], 0, ',', '.') ?></p>

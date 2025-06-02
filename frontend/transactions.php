@@ -49,7 +49,7 @@ mysqli_stmt_close($stmt);
                                 <th class="px-6 py-3 text-left">Date</th>
                                 <th class="px-6 py-3 text-left">Total</th>
                                 <th class="px-6 py-3 text-left">Status</th>
-                                <th class="px-6 py-3 text-left">Actions</th>
+                                <!-- <th class="px-6 py-3 text-left">Actions</th> -->
                             </tr>
                         </thead>
                         <tbody>
@@ -64,10 +64,10 @@ mysqli_stmt_close($stmt);
                                         <?php echo ucfirst(htmlspecialchars($transaction['status'])); ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <!-- <td class="px-6 py-4">
                                     <a href="transaction_detail.php?id=<?php echo $transaction['id']; ?>" 
                                        class="text-blue-600 hover:text-blue-800">View Details</a>
-                                </td>
+                                </td> -->
                             </tr>
                             <?php endforeach; ?>
                         </tbody>

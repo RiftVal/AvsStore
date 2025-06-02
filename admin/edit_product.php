@@ -34,7 +34,7 @@ $product = $result->fetch_assoc();
             <div class="flex-1 bg-white p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold">Edit Product</h1>
-                    <a href="produk.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                    <a href="products.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
                         <i class="fas fa-arrow-left mr-2"></i>Back to Products
                     </a>
                 </div>
@@ -80,7 +80,7 @@ $product = $result->fetch_assoc();
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Current Image</label>
                         <?php if (!empty($product['image'])): ?>
-                            <img src="../uploads/<?php echo $product['image']; ?>" alt="Current Image" class="w-32 h-auto mb-2">
+                            <img src="backend/uploads/<?php echo $product['image']; ?>" alt="Current Image" class="w-32 h-auto mb-2">
                         <?php else: ?>
                             <p class="text-sm italic text-gray-500">No image uploaded.</p>
                         <?php endif; ?>
@@ -89,7 +89,7 @@ $product = $result->fetch_assoc();
 
                     <div class="col-span-2 flex gap-2">
                         <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Update Product</button>
-                        <a href="produk.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancel</a>
+                        <a href="products.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancel</a>
                     </div>
                 </form>
             </div>

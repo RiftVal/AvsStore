@@ -1,7 +1,7 @@
 <div class="min-h-screen w-64 bg-gray-800">
     <!-- Brand/Logo Section -->
     <div class="py-4 px-6 border-b border-gray-700">
-        <h1 class="text-2xl font-bold text-white">ShopEx</h1>
+        <h1 class="text-2xl font-bold text-white">AVS Store</h1>
     </div>
 
     <ul class="py-4">

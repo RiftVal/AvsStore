@@ -49,7 +49,7 @@ $categories_result = mysqli_query($conn, $categories_query);
             <a href="product-detail.php?id=<?= $product['id'] ?>" class="block">
             <div class="aspect-square bg-gray-200 mb-2">
                 <img 
-                    src="../uploads/<?= !empty($product['image']) ? $product['image'] : 'https://placehold.co/400x400?text=No+Image' ?>" 
+                    src="../../admin/backend/uploads/<?= !empty($product['image']) ? $product['image'] : 'https://placehold.co/400x400?text=No+Image' ?>" 
                     alt="<?= htmlspecialchars($product['name']) ?>"
                     class="w-full h-full object-cover"
                 >
