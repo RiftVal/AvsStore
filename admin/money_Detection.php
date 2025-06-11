@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['money_image'])) {
 
         try {
             // Mengirim ke file PHP API terpisah (detect_money_api.php)
-            const response = await fetch('detect_money_api.php', {
+            const response = await fetch('detection_money_api.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
