@@ -1,4 +1,4 @@
-// detect_money_api.php
+// admin/partials/detection_money_api.php
 <?php
 header('Content-Type: application/json');
 
@@ -16,37 +16,37 @@ if (!isset($data['image'])) {
 }
 
 $imageData = $data['image'];
-$imageData = str_replace('data:image/jpeg;base64,', '', $imageData); // Hapus header Data URL
+$imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
 $imageData = base64_decode($imageData);
 
-$targetDir = "../uploads/"; // Pastikan folder uploads ada dan writable
+// Pastikan folder uploads ada dan dapat ditulis
+$targetDir = __DIR__ . "/../../uploads/"; 
 if (!is_dir($targetDir)) {
     mkdir($targetDir, 0777, true);
 }
 
-$fileName = uniqid('camera_') . '.jpeg';
+$fileName = 'camera_' . uniqid() . '.jpeg';
 $targetPath = $targetDir . $fileName;
 
 if (file_put_contents($targetPath, $imageData)) {
-    // Panggil script Python untuk deteksi
-    // SESUAIKAN PATH INI DENGAN LOKASI SCRIPT PYTHON ANDA DI SERVER
-    $pythonScriptPath = __DIR__ . '/../backend/python_detection_script.py'; // Contoh path relatif
-    // PASTIKAN PYTHON_EXECUTABLE_PATH SESUAI DENGAN INSTALLASI PYTHON ANDA
-    $command = escapeshellcmd('python3 ' . $pythonScriptPath . ' ' . $targetPath);
+    // Panggil script Python
+    // Pastikan path ke python dan skrip sudah benar
+    $pythonScriptPath = __DIR__ . '/../backend/uploads/python_detection_script.py';
+    $command = escapeshellcmd('python3 ' . $pythonScriptPath . ' ' . escapeshellarg($targetPath));
 
-    // Eksekusi perintah Python
+    // Eksekusi perintah dan tangkap outputnya
     $output = shell_exec($command);
-    $detectionResult = trim($output); // Ambil output dari script Python
 
-    // Opsional: Hapus gambar setelah deteksi selesai untuk menghemat ruang
+    // Hapus gambar setelah deteksi untuk menghemat ruang
     // unlink($targetPath);
 
-    // Validasi hasil dari script Python
-    if ($detectionResult === "Asli" || $detectionResult === "Palsu") {
-        echo json_encode(['status' => 'success', 'result' => $detectionResult]);
+    // Output dari Python adalah JSON, jadi kita langsung teruskan saja
+    // Tidak perlu decode dan encode ulang jika tidak ada modifikasi
+    if ($output) {
+        // Set header ke application/json karena outputnya memang JSON
+        echo $output;
     } else {
-        // Jika script Python tidak mengembalikan "Asli" atau "Palsu"
-        echo json_encode(['status' => 'error', 'message' => 'Python script returned unexpected result: ' . $detectionResult]);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to execute Python script or script returned no output.']);
     }
 
 } else {

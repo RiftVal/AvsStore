@@ -175,51 +175,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['money_image'])) {
         sendImageToServer(imageDataURL);
     });
 
-    async function sendImageToServer(imageDataURL) {
-        realtimeDetectionResult.classList.remove('hidden');
-        realtimeDetectionResult.innerHTML = 'Mendeteksi...';
-        realtimeDetectionResult.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
-        realtimeDetectionResult.classList.add('bg-gray-200', 'text-gray-700');
+    // Di dalam file admin/money_Detection.php
 
-        try {
-            // Mengirim ke file PHP API terpisah (detect_money_api.php)
-            const response = await fetch('detect_money_api.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: imageDataURL }),
+async function sendImageToServer(imageDataURL) {
+    const realtimeDetectionResult = document.getElementById('realtimeDetectionResult');
+    realtimeDetectionResult.classList.remove('hidden');
+    realtimeDetectionResult.innerHTML = 'Mendeteksi...';
+    realtimeDetectionResult.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+    realtimeDetectionResult.classList.add('bg-gray-200', 'text-gray-700');
+
+    try {
+        const response = await fetch('partials/detection_money_api.php', { // Pastikan path API benar
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: imageDataURL }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Bersihkan kelas warna sebelumnya
+        realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+
+        if (data.status === 'success' && data.detections.length > 0) {
+            let htmlResult = '<ul>';
+            let isAuthentic = true;
+            
+            data.detections.forEach(det => {
+                let authenticityClass = 'text-green-700';
+                if (det.authenticity === 'Palsu') {
+                    authenticityClass = 'text-red-700 font-bold';
+                    isAuthentic = false;
+                }
+                
+                let confidence = (det.confidence * 100).toFixed(2);
+                htmlResult += `<li class="mb-1">Nominal: <strong>${det.nominal}</strong>, Keaslian: <span class="${authenticityClass}">${det.authenticity}</span> (Akurasi: ${confidence}%)</li>`;
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-            }
+            htmlResult += '</ul>';
+            realtimeDetectionResult.innerHTML = htmlResult;
 
-            const data = await response.json();
-            console.log("Response from server:", data);
-
-            if (data.status === 'success') {
-                const detectionResult = data.result;
-                realtimeDetectionResult.innerHTML = `Uang dinyatakan: <span class="underline">${detectionResult}</span>`;
-                realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
-                if (detectionResult === 'Asli') {
-                    realtimeDetectionResult.classList.add('bg-green-100', 'text-green-800');
-                } else {
-                    realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
-                }
+            // Atur warna background berdasarkan hasil keseluruhan
+            if (isAuthentic) {
+                realtimeDetectionResult.classList.add('bg-green-100', 'text-green-800');
             } else {
-                realtimeDetectionResult.innerHTML = `Error Deteksi: ${data.message}`;
-                realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
                 realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            realtimeDetectionResult.innerHTML = `Terjadi kesalahan saat berkomunikasi dengan server: ${error.message}`;
-            realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
+            
+        } else if (data.status === 'success') {
+            realtimeDetectionResult.innerHTML = 'Tidak ada uang yang terdeteksi di gambar.';
+            realtimeDetectionResult.classList.add('bg-yellow-100', 'text-yellow-800');
+        } else {
+            // Menangani error dari server atau skrip Python
+            realtimeDetectionResult.innerHTML = `Error: ${data.message}`;
             realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        realtimeDetectionResult.innerHTML = `Terjadi kesalahan saat berkomunikasi dengan server.`;
+        realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
     }
+}
 
     // Panggil setupCamera saat halaman dimuat
     window.addEventListener('load', setupCamera);

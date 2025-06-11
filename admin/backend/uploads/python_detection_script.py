@@ -1,37 +1,80 @@
+# admin/backend/uploads/python_detection_script.py
 import sys
 import os
-# Tambahkan import library ML yang Anda gunakan, contoh:
-import tensorflow as tf
-import cv2
+import json
+from ultralytics import YOLO
 
 def detect_money(image_path):
-    # TODO: Load model ML Anda di sini
-    # model = tf.keras.models.load_model('path/to/your/money_detection_model.h5')
+    # --- Path ini akan otomatis mencari model 'best.pt' ---
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'ml_model', 'best.pt')
+    # ----------------------------------------------------
 
-    # TODO: Lakukan preprocessing gambar yang sesuai dengan model Anda
-    # img = cv2.imread(image_path)
-    # img = cv2.resize(img, (TARGET_WIDTH, TARGET_HEIGHT)) # Sesuaikan dengan input model
-    # img = img / 255.0 # Normalisasi jika model Anda memerlukan
+    try:
+        # Muat model YOLOv8
+        model = YOLO(model_path)
+    except Exception as e:
+        return json.dumps({"status": "error", "message": f"Failed to load model: {e}", "detections": []})
 
-    # TODO: Lakukan prediksi menggunakan model
-    # prediction = model.predict(np.expand_dims(img, axis=0))
+    # Lakukan prediksi
+    try:
+        results = model(image_path, conf=0.6) # conf adalah confidence threshold, bisa disesuaikan
+    except Exception as e:
+        return json.dumps({"status": "error", "message": f"Prediction failed: {e}", "detections": []})
 
-    # Untuk demo, kita akan memberikan hasil acak seperti di PHP Anda
-    import random
-    if random.random() > 0.5:
-        return "Asli"
+    detections = []
+    # Proses hasil deteksi
+    for r in results:
+        for box in r.boxes:
+            class_id = int(box.cls[0])
+            class_name = model.names[class_id]
+            confidence = float(box.conf[0])
+            
+            # Logika sederhana untuk menentukan keaslian dari nama kelas
+            if "palsu" in class_name.lower():
+                authenticity = "Palsu"
+                nominal = class_name.replace("_palsu", "").upper()
+            else:
+                authenticity = "Asli"
+                nominal = class_name.upper()
+
+            detections.append({
+                "nominal": nominal,
+                "authenticity": authenticity,
+                "confidence": confidence
+            })
+
+    # Siapkan hasil akhir dalam format JSON
+    if detections:
+        final_result = {
+            "status": "success",
+            "message": f"{len(detections)} object(s) detected.",
+            "detections": detections
+        }
     else:
-        return "Palsu"
+        final_result = {
+            "status": "success",
+            "message": "No money detected.",
+            "detections": []
+        }
+        
+    return json.dumps(final_result, indent=4)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python python_detection_script.py <image_path>")
+        print(json.dumps({"status": "error", "message": "No image path provided."}))
+        sys.exit(1)
+        
+    image_path_arg = sys.argv[1]
+    if not os.path.exists(image_path_arg):
+        print(json.dumps({"status": "error", "message": f"Image not found at {image_path_arg}"}))
         sys.exit(1)
 
-    image_path = sys.argv[1]
-    if not os.path.exists(image_path):
-        print(f"Error: Image not found at {image_path}")
+    # Instal ultralytics jika belum ada
+    try:
+        import ultralytics
+    except ImportError:
+        print(json.dumps({"status": "error", "message": "Ultralytics library not found. Please run 'pip install ultralytics'."}))
         sys.exit(1)
-
-    result = detect_money(image_path)
-    print(result) # Cetak hasil deteksi ke stdout
+        
+    result_json = detect_money(image_path_arg)
+    print(result_json)
