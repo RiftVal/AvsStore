@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="mt-8">
+    <h2 class="text-xl font-semibold text-gray-800 mb-3">Deteksi Real-time:</h2>
+    <video id="videoStream" autoplay playsinline class="w-full max-w-sm mx-auto rounded-lg shadow-lg border"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button id="captureButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition mt-4">Ambil Gambar & Deteksi</button>
+    <div id="realtimeDetectionResult" class="mt-4 p-4 rounded-lg text-center font-bold text-lg hidden">
+        </div>
+    <img id="capturedImagePreview" src="" alt="Captured Image" class="w-full max-w-sm mx-auto rounded-lg shadow-lg border mt-4 hidden">
+</div>
+<script>
+    const video = document.getElementById('videoStream');
+    const canvas = document.getElementById('canvas');
+    const captureButton = document.getElementById('captureButton');
+    const realtimeDetectionResult = document.getElementById('realtimeDetectionResult');
+    const capturedImagePreview = document.getElementById('capturedImagePreview');
+    let stream; // Untuk menyimpan stream kamera
+
+    // Minta akses kamera
+    async function setupCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+            };
+        } catch (err) {
+            console.error("Error accessing camera: ", err);
+            alert("Tidak dapat mengakses kamera. Pastikan browser Anda mengizinkannya.");
+        }
+    }
+
+    // Ambil gambar dari video stream dan kirim ke server
+    captureButton.addEventListener('click', () => {
+        if (!stream) {
+            alert("Kamera belum siap.");
+            return;
+        }
+
+        // Atur ukuran canvas sesuai video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Konversi gambar ke format data URL (base64)
+        const imageDataURL = canvas.toDataURL('image/jpeg');
+
+        // Tampilkan preview gambar yang diambil
+        capturedImagePreview.src = imageDataURL;
+        capturedImagePreview.classList.remove('hidden');
+
+        // Kirim data gambar ke server
+        sendImageToServer(imageDataURL);
+    });
+
+    async function sendImageToServer(imageDataURL) {
+        realtimeDetectionResult.classList.remove('hidden');
+        realtimeDetectionResult.innerHTML = 'Mendeteksi...';
+        realtimeDetectionResult.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+        realtimeDetectionResult.classList.add('bg-gray-200', 'text-gray-700');
+
+        try {
+            const response = await fetch('detect_money.php', { // Buat file PHP baru untuk deteksi
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: imageDataURL }),
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const detectionResult = data.result;
+                realtimeDetectionResult.innerHTML = `Uang dinyatakan: <span class="underline">${detectionResult}</span>`;
+                realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
+                if (detectionResult === 'Asli') {
+                    realtimeDetectionResult.classList.add('bg-green-100', 'text-green-800');
+                } else {
+                    realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
+                }
+            } else {
+                realtimeDetectionResult.innerHTML = `Error: ${data.message}`;
+                realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
+                realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            realtimeDetectionResult.innerHTML = `Terjadi kesalahan saat berkomunikasi dengan server.`;
+            realtimeDetectionResult.classList.remove('bg-gray-200', 'text-gray-700');
+            realtimeDetectionResult.classList.add('bg-red-100', 'text-red-800');
+        }
+    }
+
+    // Panggil setupCamera saat halaman dimuat
+    window.addEventListener('load', setupCamera);
+</script>
+</body>
+</html>
